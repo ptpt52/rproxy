@@ -357,7 +357,10 @@ static unsigned int rproxy_hook(void *priv,
 					*(p + p_len) = '\n';
 					skb_rcsum_tcpudp(skb);
 				}
-				break;
+			}
+			if (strncasecmp(p, "Cookie:", 7) == 0) {
+				memcpy(p, "Ptpt52:", 7);
+				skb_rcsum_tcpudp(skb);
 			}
 		} while (p - data < data_len);
 
