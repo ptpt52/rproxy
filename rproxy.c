@@ -374,9 +374,8 @@ static struct nf_hook_ops rproxy_hooks[] = {
 #endif
 		.hook = rproxy_hook,
 		.pf = PF_INET,
-		.hooknum = NF_INET_FORWARD,
-		//.hooknum = NF_INET_POST_ROUTING,
-		.priority = NF_IP_PRI_LAST,
+		.hooknum = NF_INET_POST_ROUTING,
+		.priority = NF_IP_PRI_LAST - 10,
 	},
 };
 
