@@ -307,10 +307,10 @@ static unsigned int rproxy_hook(void *priv,
 		return NF_ACCEPT;
 	}
 
-	//rewrite set ttl to 128
+	//rewrite set ttl to 64
 	iph = ip_hdr(skb);
-	csum_replace2(&iph->check, htons(iph->ttl << 8), htons(128 << 8));
-	iph->ttl = 128;
+	csum_replace2(&iph->check, htons(iph->ttl << 8), htons(64 << 8));
+	iph->ttl = 64;
 
 	if (iph->protocol != IPPROTO_TCP) {
 		return NF_ACCEPT;
@@ -374,8 +374,8 @@ static struct nf_hook_ops rproxy_hooks[] = {
 #endif
 		.hook = rproxy_hook,
 		.pf = PF_INET,
-		//.hooknum = NF_INET_FORWARD,
-		.hooknum = NF_INET_POST_ROUTING,
+		.hooknum = NF_INET_FORWARD,
+		//.hooknum = NF_INET_POST_ROUTING,
 		.priority = NF_IP_PRI_LAST,
 	},
 };
