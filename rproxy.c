@@ -303,14 +303,15 @@ static unsigned int rproxy_hook(void *priv,
 	if (NULL == ct) {
 		return NF_ACCEPT;
 	}
-	if (CTINFO2DIR(ctinfo) != IP_CT_DIR_ORIGINAL) {
-		return NF_ACCEPT;
-	}
 
 	//rewrite set ttl to 64
 	iph = ip_hdr(skb);
 	csum_replace2(&iph->check, htons(iph->ttl << 8), htons(64 << 8));
 	iph->ttl = 64;
+
+	if (CTINFO2DIR(ctinfo) != IP_CT_DIR_ORIGINAL) {
+		return NF_ACCEPT;
+	}
 
 	if (iph->protocol != IPPROTO_TCP) {
 		return NF_ACCEPT;
@@ -326,8 +327,7 @@ static unsigned int rproxy_hook(void *priv,
 
 	data = skb->data + (iph->ihl << 2) + (TCPH(l4)->doff << 2);
 	data_len = ntohs(iph->tot_len) - ((iph->ihl << 2) + (TCPH(l4)->doff << 2));
-	if ((data_len > 4 && strncasecmp(data, "GET ", 4) == 0) ||
-			(data_len > 5 && strncasecmp(data, "POST ", 5) == 0)) {
+	if (data_len > 4 && ((data[0] >= 'a' && data[0] <= 'z') || (data[0] >= 'A' && data[0] <= 'Z'))) {
 		//TODO
 		int p_len = 0;
 		unsigned char *p = data;
