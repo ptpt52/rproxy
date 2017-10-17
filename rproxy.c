@@ -255,12 +255,12 @@ int skb_rcsum_tcpudp(struct sk_buff *skb)
 
 #define TCPH(t) ((struct tcphdr *)(t))
 
-#define RPROXY_UA1 "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36 Edge/12.0"
-#define RPROXY_UA2 "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 Edge/12.0"
-#define RPROXY_UA3 "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/12.0"
-#define RPROXY_UA4 "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko)"
-#define RPROXY_UA5 "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36"
-#define RPROXY_UA6 "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64)"
+#define RPROXY_UA1 "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36 Edge/12.0\r"
+#define RPROXY_UA2 "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 Edge/12.0\r"
+#define RPROXY_UA3 "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/12.0\r"
+#define RPROXY_UA4 "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko)\r"
+#define RPROXY_UA5 "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36\r"
+#define RPROXY_UA6 "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64)\r"
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 13, 0)
 static unsigned rproxy_hook(unsigned int hooknum,
