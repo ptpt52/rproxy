@@ -318,16 +318,12 @@ static unsigned int rproxy_hook(void *priv,
 	}
 
 	l4 = (void *)iph + iph->ihl * 4;
-	if (TCPH(l4)->dest != __constant_htons(80) &&
-			TCPH(l4)->dest != __constant_htons(8080) &&
-			TCPH(l4)->dest != __constant_htons(8000) &&
-			TCPH(l4)->dest != __constant_htons(1080)) {
-		return NF_ACCEPT;
-	}
 
 	data = skb->data + (iph->ihl << 2) + (TCPH(l4)->doff << 2);
 	data_len = ntohs(iph->tot_len) - ((iph->ihl << 2) + (TCPH(l4)->doff << 2));
-	if (data_len > 4 && ((data[0] >= 'a' && data[0] <= 'z') || (data[0] >= 'A' && data[0] <= 'Z'))) {
+	if (data_len > 24 &&
+			((data[0] >= 'a' && data[0] <= 'z') || (data[0] >= 'A' && data[0] <= 'Z')) &&
+			((data[1] >= 'a' && data[1] <= 'z') || (data[1] >= 'A' && data[1] <= 'Z'))) {
 		//TODO
 		int p_len = 0;
 		unsigned char *p = data;
@@ -356,15 +352,10 @@ static unsigned int rproxy_hook(void *priv,
 					}
 					*(p + p_len) = '\n';
 					skb_rcsum_tcpudp(skb);
+					break;
 				}
 			}
-			if (strncasecmp(p, "Cookie:", 7) == 0) {
-				memcpy(p, "Ptpt52:", 7);
-				skb_rcsum_tcpudp(skb);
-			}
 		} while (p - data < data_len);
-
-		return NF_ACCEPT;
 	}
 
 	return NF_ACCEPT;
