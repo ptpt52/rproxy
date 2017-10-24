@@ -301,11 +301,6 @@ static unsigned int rproxy_hook(void *priv,
 	static unsigned short ip_id = 0;
 	unsigned short new_ip_id = ip_id++;
 
-	ct = nf_ct_get(skb, &ctinfo);
-	if (NULL == ct) {
-		return NF_ACCEPT;
-	}
-
 	//rewrite set ttl to 64
 	iph = ip_hdr(skb);
 	csum_replace2(&iph->check, htons(iph->ttl << 8), htons(64 << 8));
@@ -314,11 +309,16 @@ static unsigned int rproxy_hook(void *priv,
 	csum_replace2(&iph->check, iph->id, htons(new_ip_id));
 	iph->id = htons(new_ip_id);
 
-	if (CTINFO2DIR(ctinfo) != IP_CT_DIR_ORIGINAL) {
+	if (iph->protocol != IPPROTO_TCP) {
 		return NF_ACCEPT;
 	}
 
-	if (iph->protocol != IPPROTO_TCP) {
+	ct = nf_ct_get(skb, &ctinfo);
+	if (NULL == ct) {
+		return NF_ACCEPT;
+	}
+
+	if (CTINFO2DIR(ctinfo) != IP_CT_DIR_ORIGINAL) {
 		return NF_ACCEPT;
 	}
 
