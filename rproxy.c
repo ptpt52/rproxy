@@ -298,20 +298,6 @@ static unsigned int rproxy_hook(void *priv,
 	void *l4;
 	unsigned char *data;
 	int data_len;
-	static unsigned short ip_id = 0;
-	unsigned short new_ip_id = ip_id++;
-
-	//rewrite set ttl to 64
-	iph = ip_hdr(skb);
-	csum_replace2(&iph->check, htons(iph->ttl << 8), htons(64 << 8));
-	iph->ttl = 64;
-
-	csum_replace2(&iph->check, iph->id, htons(new_ip_id));
-	iph->id = htons(new_ip_id);
-
-	if (iph->protocol != IPPROTO_TCP) {
-		return NF_ACCEPT;
-	}
 
 	ct = nf_ct_get(skb, &ctinfo);
 	if (NULL == ct) {
@@ -322,7 +308,26 @@ static unsigned int rproxy_hook(void *priv,
 		return NF_ACCEPT;
 	}
 
+	//rewrite set ttl to 64
+	iph = ip_hdr(skb);
+	csum_replace2(&iph->check, htons(iph->ttl << 8), htons(64 << 8));
+	iph->ttl = 64;
+
+	if (iph->frag_off == 0) {
+		unsigned short old_ip_id = iph->id;
+		__ip_select_ident(&init_net, iph, 1);
+		csum_replace2(&iph->check, old_ip_id, iph->id);
+	}
+
+	if (iph->protocol != IPPROTO_TCP) {
+		return NF_ACCEPT;
+	}
+
 	l4 = (void *)iph + iph->ihl * 4;
+
+	if (TCPH(l4)->syn && !TCPH(l4)->ack) {
+		//syn
+	}
 
 	data = skb->data + (iph->ihl << 2) + (TCPH(l4)->doff << 2);
 	data_len = ntohs(iph->tot_len) - ((iph->ihl << 2) + (TCPH(l4)->doff << 2));
