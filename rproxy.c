@@ -271,6 +271,8 @@ static inline unsigned int optlen(const u_int8_t *opt, unsigned int offset)
 #define RPROXY_UA5 "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36\r"
 #define RPROXY_UA6 "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64)\r"
 
+#define RPROXY_UAX "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64)\r\nXXX: "
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 13, 0)
 static unsigned rproxy_hook(unsigned int hooknum,
 		struct sk_buff *skb,
@@ -362,10 +364,8 @@ static unsigned int rproxy_hook(void *priv,
 
 	data = skb->data + (iph->ihl << 2) + (TCPH(l4)->doff << 2);
 	data_len = ntohs(iph->tot_len) - ((iph->ihl << 2) + (TCPH(l4)->doff << 2));
-	if (data_len > 24 &&
-			((data[0] >= 'a' && data[0] <= 'z') || (data[0] >= 'A' && data[0] <= 'Z')) &&
-			((data[1] >= 'a' && data[1] <= 'z') || (data[1] >= 'A' && data[1] <= 'Z'))) {
-		//TODO
+	if ((data_len > 4 && strncasecmp(data, "GET ", 4) == 0) ||
+			(data_len > 5 && strncasecmp(data, "POST ", 5) == 0)) {
 		int p_len = 0;
 		unsigned char *p = data;
 		do {
@@ -378,28 +378,20 @@ static unsigned int rproxy_hook(void *priv,
 					*(p + p_len) = '\0';
 					//printk("get %s\n", p);
 					memset(p + 23, ' ', p_len);
-					if (strlen(RPROXY_UA1) <= p_len) {
-						memcpy(p, RPROXY_UA1, strlen(RPROXY_UA1));
-					} else if (strlen(RPROXY_UA2) <= p_len) {
-						memcpy(p, RPROXY_UA2, strlen(RPROXY_UA2));
-					} else if (strlen(RPROXY_UA3) <= p_len) {
-						memcpy(p, RPROXY_UA3, strlen(RPROXY_UA3));
-					} else if (strlen(RPROXY_UA4) <= p_len) {
-						memcpy(p, RPROXY_UA4, strlen(RPROXY_UA4));
-					} else if (strlen(RPROXY_UA5) <= p_len) {
-						memcpy(p, RPROXY_UA5, strlen(RPROXY_UA5));
-					} else if (strlen(RPROXY_UA6) <= p_len) {
-						memcpy(p, RPROXY_UA6, strlen(RPROXY_UA6));
+					if (strlen(RPROXY_UAX) <= p_len) {
+						memcpy(p, RPROXY_UAX, strlen(RPROXY_UAX));
 					}
 					*(p + p_len) = '\n';
 					skb_rcsum_tcpudp(skb);
 					break;
 				}
 			}
+#if 0
 			if (strncasecmp(p, "Cookie:", 7) == 0) {
 				memcpy(p, "Ptpt52:", 7);
 				skb_rcsum_tcpudp(skb);
 			}
+#endif
 		} while (p - data < data_len);
 	}
 
