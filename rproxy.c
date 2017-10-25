@@ -253,6 +253,15 @@ int skb_rcsum_tcpudp(struct sk_buff *skb)
 	return 0;
 }
 
+static inline unsigned int optlen(const u_int8_t *opt, unsigned int offset)
+{
+	/* Beware zero-length options: make finite progress */
+	if (opt[offset] <= TCPOPT_NOP || opt[offset+1] == 0)
+		return 1;
+	else
+		return opt[offset+1];
+}
+
 #define TCPH(t) ((struct tcphdr *)(t))
 
 #define RPROXY_UA1 "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36 Edge/12.0\r"
@@ -327,6 +336,28 @@ static unsigned int rproxy_hook(void *priv,
 
 	if (TCPH(l4)->syn && !TCPH(l4)->ack) {
 		//syn
+		int i;
+		int tcp_hdrlen;
+		u8 *opt;
+
+		tcp_hdrlen = TCPH(l4)->doff * 4;
+		opt = (u_int8_t *)l4;
+		for (i = sizeof(struct tcphdr); i <= tcp_hdrlen - TCPOLEN_TIMESTAMP; i += optlen(opt, i)) {
+			if (opt[i] == TCPOPT_TIMESTAMP && opt[i+1] == TCPOLEN_TIMESTAMP) {
+				opt[i+0] = TCPOPT_NOP;
+				opt[i+1] = TCPOPT_NOP;
+				opt[i+2] = TCPOPT_NOP;
+				opt[i+3] = TCPOPT_NOP;
+				opt[i+4] = TCPOPT_NOP;
+				opt[i+5] = TCPOPT_NOP;
+				opt[i+6] = TCPOPT_NOP;
+				opt[i+7] = TCPOPT_NOP;
+				opt[i+8] = TCPOPT_NOP;
+				opt[i+9] = TCPOPT_NOP;
+				skb_rcsum_tcpudp(skb);
+				break;
+			}
+		}
 	}
 
 	data = skb->data + (iph->ihl << 2) + (TCPH(l4)->doff << 2);
