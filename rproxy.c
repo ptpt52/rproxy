@@ -189,7 +189,7 @@ static struct file_operations rproxy_fops = {
 	.llseek  = seq_lseek,
 };
 
-int skb_rcsum_tcpudp(struct sk_buff *skb)
+static int skb_rcsum_tcpudp(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
 	int len = ntohs(iph->tot_len);
@@ -440,7 +440,11 @@ static int __init rproxy_init(void) {
 		goto cdev_add_failed;
 	}
 
-	rproxy_class = class_create(THIS_MODULE,"rproxy_class");
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
+	rproxy_class = class_create(THIS_MODULE, "rproxy_class");
+#else
+	rproxy_class = class_create("rproxy_class");
+#endif
 	if (IS_ERR(rproxy_class)) {
 		RPROXY_println("failed in creating class");
 		retval = -EINVAL;
